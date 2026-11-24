@@ -1,5 +1,12 @@
-﻿# Microsoft Office lock/temp files
+# Microsoft Office lock/temp files
 ~$*
 *.tmp
 Thumbs.db
 .DS_Store
+
+# Node.js / Build / Env
+node_modules/
+dist/
+coverage/
+.env
+*.log

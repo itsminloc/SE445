@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ORI — SI Monitoring &amp; Omnichannel Integration Lab (SE445)</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/css/monitoring.css" />
+</head>
+<body>
+  <header class="soc-header">
+    <div class="soc-brand">
+      <span class="soc-badge-env" id="sseIndicator">
+        <span class="pulse-dot"></span> STREAM CONNECTED [SSE]
+      </span>
+      <div class="soc-title-wrap">
+        <h1>ABC RETAIL // ORI SI MONITORING &amp; TESTING LAB</h1>
+        <p id="brokerModeDisplay">SE445 CASE STUDY 02 • API-LED + RABBITMQ EDA + AI POS MAPPER</p>
+      </div>
+    </div>
+
+    <div class="soc-mode-switch">
+      <button type="button" class="mode-tab-btn is-active" id="tabRealtime">[01] REAL-TIME MONITORING</button>
+      <button type="button" class="mode-tab-btn" id="tabScenario">[02] SCENARIO TESTING LAB</button>
+      <button type="button" class="mode-tab-btn" id="tabSimulator">[03] ORDER &amp; AI POS SIMULATOR</button>
+      <button type="button" class="mode-tab-btn" id="tabCeo">[04] CEO EXECUTIVE DASHBOARD</button>
+    </div>
+
+    <div class="soc-nav-actions">
+      <button type="button" class="soc-nav-btn is-accent" id="btnRefreshAll">↻ LÀM MỚI DỮ LIỆU</button>
+    </div>
+  </header>
+
+  <main class="soc-main">
+    <!-- VIEW 1: REAL-TIME MONITORING -->
+    <section class="soc-view-section is-visible" id="sectionRealtime">
+      <div class="telemetry-row">
+        <div class="metric-box is-cyan">
+          <div class="metric-label">EVENTS PUBLISHED (EXCHANGE)</div>
+          <div class="metric-value" id="brokerTotal">0</div>
+          <div class="metric-sub"><span>Exchange: retail.events</span><span id="brokerModeTag">ACTIVE</span></div>
+        </div>
+        <div class="metric-box is-green">
+          <div class="metric-label">CONSUMERS PROCESSED (ACK)</div>
+          <div class="metric-value" id="brokerProcessed">0</div>
+          <div class="metric-sub"><span>Queues: wms / crm / tms</span><span style="color: var(--color-green);">IDEMPOTENT</span></div>
+        </div>
+        <div class="metric-box is-amber">
+          <div class="metric-label">DEAD LETTER QUEUE (DLQ)</div>
+          <div class="metric-value" id="dlqCountBadge">0 msgs</div>
+          <div class="metric-sub"><span>Queue: retail.dlq</span><span style="color: var(--color-amber);">QUARANTINED</span></div>
+        </div>
+        <div class="metric-box is-green">
+          <div class="metric-label">RETRIES / BACKOFF COUNT</div>
+          <div class="metric-value" id="brokerRetries">0</div>
+          <div class="metric-sub"><span>Max Retries: 3</span><span style="color: var(--color-green);">DLX PROTECTED</span></div>
+        </div>
+      </div>
+
+      <div class="section-headline">MICROSERVICES &amp; SYSTEM HEALTH MATRIX (DATABASE PER SERVICE)</div>
+      <div class="container-grid" id="containerGrid"></div>
+
+      <div class="dlq-panel">
+        <div class="dlq-panel-header">
+          <div class="dlq-title">DEAD LETTER QUEUE (DLQ) INSPECTOR &amp; REPLAY CONTROL</div>
+          <button type="button" class="btn-terminal-clear" id="btnClearDlq">XÓA RỖNG DLQ</button>
+        </div>
+        <div class="dlq-table-wrap">
+          <table class="dlq-table">
+            <thead>
+              <tr>
+                <th>EVENT ID</th>
+                <th>QUEUE NGUỒN</th>
+                <th>NGUYÊN NHÂN LỖI</th>
+                <th>RETRY</th>
+                <th>TRẠNG THÁI</th>
+                <th style="text-align: right;">THAO TÁC</th>
+              </tr>
+            </thead>
+            <tbody id="dlqTableBody"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- VIEW 2: SCENARIO TESTING LAB -->
+    <section class="soc-view-section" id="sectionScenario">
+      <div class="section-headline">PHÒNG LAB KIỂM THỬ 6 KỊCH BẢN TÍCH HỢP (TC01–TC10)</div>
+      <div class="scenario-grid" id="scenarioGrid"></div>
+    </section>
+
+    <!-- VIEW 3: OMNICHANNEL ORDER & AI POS SIMULATOR -->
+    <section class="soc-view-section" id="sectionSimulator">
+      <div class="section-headline">BỘ MÔ PHỎNG ĐẶT ĐƠN ĐA KÊNH &amp; AI DATA MAPPING (POS LEGACY)</div>
+      <div class="sim-grid">
+        <div class="sim-card">
+          <h3>1. E-COMMERCE ORDER CHECKOUT (POST /api/v1/orders)</h3>
+          <label>Kênh bán (Channel): <input type="text" id="simChannel" value="WEB_BRANCH_01" /></label>
+          <label>Khách hàng (CRM):
+            <select id="simCustomer">
+              <option value="CUS-001">CUS-001 — Nguyễn Văn An (GOLD)</option>
+              <option value="CUS-002">CUS-002 — Trần Thị Bình (SILVER)</option>
+              <option value="CUS-003">CUS-003 — Lê Minh Cường (PLATINUM)</option>
+            </select>
+          </label>
+          <label>Sản phẩm (WMS SKU):
+            <select id="simSku">
+              <option value="SKU-001">SKU-001 — Laptop Gaming (150,000d)</option>
+              <option value="SKU-002">SKU-002 — Bàn phím Cơ K2 (450,000d)</option>
+              <option value="SKU-004">SKU-004 — Màn hình 4K (Tồn ít: 3)</option>
+              <option value="SKU-005">SKU-005 — Tai nghe (HẾT HÀNG: 0)</option>
+            </select>
+          </label>
+          <label>Số lượng: <input type="number" id="simQty" value="2" min="1" /></label>
+          <label class="sim-check"><input type="checkbox" id="simTmsFail" /> Giả lập lỗi TMS (Đẩy sang DLQ sau 3 retry)</label>
+          <button type="button" class="btn-run-scenario" id="btnSubmitOrder">GỬI ĐƠN HÀNG ĐỒNG BỘ + BẤT ĐỒNG BỘ</button>
+          <pre class="sim-output" id="orderSimOutput">// Kết quả HTTP 202 / 409 &amp; Trạng thái Order DB sẽ hiển thị tại đây...</pre>
+        </div>
+
+        <div class="sim-card">
+          <h3>2. LEGACY POS AI MAPPER (POST /api/v1/pos/ingest)</h3>
+          <label>Mã cửa hàng POS: <input type="text" id="posStoreId" value="POS_STORE_214" /></label>
+          <label>Dữ liệu hóa đơn POS thô (chứa PII để kiểm tra Masking):
+            <textarea id="posRawInput" rows="4">CH: POS-214 | MA_KH: CUS-002 | SDT: 0905123456 | EMAIL: khach@abc.vn | SKU-002 SL:1 GIA:450000d | DIA_CHI: 254 Nguyen Van Linh</textarea>
+          </label>
+          <button type="button" class="btn-run-scenario" id="btnIngestPos">CHẠY AI MAPPER &amp; ĐẨY ĐƠN VÀO PIPELINE</button>
+          <pre class="sim-output" id="posSimOutput">// PII Masked + Canonical Order JSON + Order Status...</pre>
+        </div>
+      </div>
+
+      <div class="sim-grid" style="margin-top: 16px;">
+        <div class="sim-card">
+          <h3>TRẠNG THÁI TỒN KHO WMS (wms_db)</h3>
+          <pre class="sim-output" id="wmsStateBox">Đang tải...</pre>
+        </div>
+        <div class="sim-card">
+          <h3>ĐIỂM THƯỞNG CRM &amp; VẬN ĐƠN TMS</h3>
+          <pre class="sim-output" id="crmTmsStateBox">Đang tải...</pre>
+        </div>
+      </div>
+    </section>
+
+    <!-- VIEW 4: CEO EXECUTIVE DASHBOARD (CASE STUDY 04) -->
+    <section class="soc-view-section" id="sectionCeo">
+      <div id="ceoDashboardContent">
+        <div class="section-headline">CEO EXECUTIVE DASHBOARD — HIỆU QUẢ TÍCH HỢP ĐA KÊNH (ABC RETAIL)</div>
+        <div class="telemetry-row">
+          <div class="metric-box is-purple">
+            <div class="metric-label">OMNICHANNEL GMV REVENUE</div>
+            <div class="metric-value" id="ceoTotalRevenue">0 d</div>
+            <div class="metric-sub"><span>Web + POS Consolidated</span><span style="color: var(--color-purple);">REAL-TIME</span></div>
+          </div>
+          <div class="metric-box is-cyan">
+            <div class="metric-label">TOTAL PROCESSED ORDERS</div>
+            <div class="metric-value" id="ceoTotalOrders">0</div>
+            <div class="metric-sub"><span>Old Baseline: 25/hr</span><span style="color: var(--color-cyan);">EDA SCALABLE</span></div>
+          </div>
+          <div class="metric-box is-green">
+            <div class="metric-label">FULFILLMENT COMPLETION SLA</div>
+            <div class="metric-value" id="ceoCompletionRate">100%</div>
+            <div class="metric-sub"><span>Stock Check &lt; 200ms</span><span style="color: var(--color-green);">READY_TO_SHIP</span></div>
+          </div>
+          <div class="metric-box is-amber">
+            <div class="metric-label">ZERO LOST ORDERS GUARANTEE</div>
+            <div class="metric-value" id="ceoDlqSaved">0 guarded</div>
+            <div class="metric-sub"><span>DLQ Resilience</span><span style="color: var(--color-amber);">ACTIVE</span></div>
+          </div>
+        </div>
+
+        <div class="sim-grid">
+          <div class="dlq-panel">
+            <div class="dlq-panel-header">
+              <div class="dlq-title" style="color: var(--color-cyan);">DOANH THU THEO KÊNH BÁN (WEB VS POS AI MAPPER)</div>
+            </div>
+            <table class="dlq-table">
+              <thead>
+                <tr><th>NHÓM KÊNH</th><th>SỐ ĐƠN</th><th>DOANH THU</th><th>TỶ TRỌNG</th></tr>
+              </thead>
+              <tbody id="ceoChannelBody"></tbody>
+            </table>
+          </div>
+
+          <div class="dlq-panel">
+            <div class="dlq-panel-header">
+              <div class="dlq-title">CẢNH BÁO TỒN KHO THẤP / HẾT HÀNG (WMS REAL-TIME)</div>
+            </div>
+            <table class="dlq-table">
+              <thead>
+                <tr><th>SẢN PHẨM (SKU)</th><th>KHẢ DỤNG</th><th>MỨC CẢNH BÁO</th></tr>
+              </thead>
+              <tbody id="ceoLowStockBody"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="sim-card" style="margin-top: 16px;">
+          <h3>EXECUTIVE SLA BENCHMARK, AI PROTECTION &amp; CRM / TMS SUMMARY</h3>
+          <pre class="sim-output" id="ceoOpsSummaryBox">Đang tổng hợp số liệu điều hành...</pre>
+        </div>
+      </div>
+    </section>
+
+    <!-- LIVE CONSOLE -->
+    <div class="terminal-card">
+      <div class="terminal-header">
+        <div class="terminal-title">&gt;_ LIVE TELEMETRY &amp; EVENT STREAM CONSOLE (SSE)</div>
+        <div class="terminal-controls">
+          <select id="logFilterSelect" class="terminal-filter-select">
+            <option value="ALL">TẤT CẢ KÊNH</option>
+            <option value="BROKER">BROKER (RABBITMQ)</option>
+            <option value="DLQ">DEAD LETTER (DLQ)</option>
+            <option value="SCENARIO">SCENARIO LAB</option>
+            <option value="AI">AI POS MAPPER</option>
+            <option value="SECURITY">SECURITY</option>
+            <option value="HEALTH">HEALTH</option>
+          </select>
+          <button type="button" class="btn-terminal-clear" id="btnClearLogs">XÓA LOG</button>
+        </div>
+      </div>
+      <div class="terminal-logs" id="terminalLogs"></div>
+    </div>
+  </main>
+
+  <script src="/js/ceo-dashboard.js"></script>
+  <script src="/js/monitoring.js"></script>
+</body>
+</html>

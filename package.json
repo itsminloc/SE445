@@ -1,0 +1,52 @@
+{
+  "name": "se445-ori-platform",
+  "version": "2.0.0",
+  "description": "SE445 Case Study 02 - Unified Omnichannel Retail Integration (ORI) Platform with API-led Connectivity, RabbitMQ EDA, and AI Data Mapping",
+  "main": "dist/order-process/server.js",
+  "scripts": {
+    "dev": "tsx watch services/demo-runner.ts",
+    "start": "tsx services/demo-runner.ts",
+    "start:wms": "tsx services/wms-system/server.ts",
+    "start:crm": "tsx services/crm-system/server.ts",
+    "start:tms": "tsx services/tms-system/server.ts",
+    "start:order": "tsx services/order-process/server.ts",
+    "build": "tsc",
+    "typecheck": "tsc --noEmit",
+    "test": "node scripts/run-tests.mjs",
+    "test:unit": "tsx --test tests/unit/*.spec.ts",
+    "test:integration": "tsx --test tests/integration/*.spec.ts",
+    "verify:infra": "node scripts/verify-containers.mjs",
+    "infra:up": "docker compose up -d",
+    "infra:down": "docker compose down",
+    "infra:dev": "docker compose -f docker-compose.dev.yml up -d"
+  },
+  "keywords": [
+    "se445",
+    "system-integration",
+    "omnichannel-retail",
+    "api-led-connectivity",
+    "rabbitmq",
+    "event-driven-architecture",
+    "ai-data-mapping"
+  ],
+  "author": "ORI Team - Duy Tan University (SE445-C)",
+  "license": "MIT",
+  "dependencies": {
+    "amqplib": "^0.10.5",
+    "cors": "^2.8.6",
+    "dotenv": "^16.4.7",
+    "express": "^5.2.1",
+    "jsonwebtoken": "^9.0.3",
+    "pg": "^8.13.3"
+  },
+  "devDependencies": {
+    "@types/amqplib": "^0.10.6",
+    "@types/cors": "^2.8.17",
+    "@types/express": "^5.0.0",
+    "@types/jsonwebtoken": "^9.0.7",
+    "@types/node": "^22.10.0",
+    "@types/pg": "^8.11.10",
+    "tsx": "^4.19.2",
+    "typescript": "^5.7.2"
+  }
+}

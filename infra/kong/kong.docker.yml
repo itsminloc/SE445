@@ -1,0 +1,60 @@
+_format_version: "3.0"
+_transform: true
+
+services:
+  - name: order-process-service
+    url: http://order-process:3004
+    routes:
+      - name: orders-route
+        paths:
+          - /api/v1/orders
+          - /api/v1/pos
+          - /api/v1/monitoring
+          - /api/v1/auth
+        strip_path: false
+    plugins:
+      - name: rate-limiting
+        config:
+          minute: 100
+          policy: local
+      - name: correlation-id
+        config:
+          header_name: X-Correlation-ID
+          generator: uuid
+          echo_downstream: true
+
+  - name: wms-system-service
+    url: http://wms-system:3001
+    routes:
+      - name: wms-route
+        paths:
+          - /api/v1/wms
+        strip_path: true
+    plugins:
+      - name: rate-limiting
+        config:
+          minute: 100
+          policy: local
+
+  - name: crm-system-service
+    url: http://crm-system:3002
+    routes:
+      - name: crm-route
+        paths:
+          - /api/v1/crm
+        strip_path: true
+
+  - name: tms-system-service
+    url: http://tms-system:3003
+    routes:
+      - name: tms-route
+        paths:
+          - /api/v1/tms
+        strip_path: true
+
+consumers:
+  - username: ori-channel-client
+    jwt_secrets:
+      - key: ori-client-key
+        algorithm: HS256
+        secret: ori-dev-jwt-secret-change-in-production

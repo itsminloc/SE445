@@ -1,0 +1,30 @@
+# SE445 ORI (Omnichannel Retail Integration) - AI Agent Rules & Operational Protocol
+
+## 1. Mandatory Context & Protocol
+Mọi AI Agent và thành viên nhóm khi phát triển, refactor hoặc review mã nguồn **BẮT BUỘC** phải:
+1. Đọc và tuân thủ tuyệt đối các quy chuẩn trong thư mục `.skills/`:
+   - [ori-integration-rules.md](file:///.skills/ori-integration-rules.md): Quy tắc kiến trúc tích hợp 3 tầng API-led, xử lý Sync (<200ms) / Async (`202 Accepted`), RabbitMQ Topic Exchange, Idempotency, Concurrency Lock và DLQ.
+   - [ai-pos-mapping-rules.md](file:///.skills/ai-pos-mapping-rules.md): Quy chuẩn ánh xạ dữ liệu POS legacy bằng AI (PII Masking, Structured JSON Schema, Template Cache, Offline Fallback).
+   - [clean-code/SKILL.md](file:///.agents/skills/clean-code/SKILL.md): Quy chuẩn Clean Code, SRP (`<= 300` dòng/file) và phân tầng domain.
+2. Đối chiếu với các tài liệu kiến trúc tại thư mục `docs/`:
+   - [SYSTEM-SPEC.md](file:///docs/SYSTEM-SPEC.md)
+   - [DATABASE-SCHEMA.md](file:///docs/DATABASE-SCHEMA.md)
+   - [EVENT-SCHEMA.md](file:///docs/EVENT-SCHEMA.md)
+   - [API-SPEC.md](file:///docs/API-SPEC.md)
+
+---
+
+## 2. Architectural & Engineering Rules
+- **Database per Service**: 4 dịch vụ (`order-process`, `wms-system`, `crm-system`, `tms-system`) sở hữu logical database riêng (`order_db`, `wms_db`, `crm_db`, `tms_db`). Cấm truy cập chéo bảng giữa các dịch vụ; giao tiếp chéo chỉ qua REST System API hoặc RabbitMQ Event.
+- **Layered Service Structure**: Mỗi service chia rõ `*.model.ts`, `*.repository.ts`, `*.service.ts`, `*.controller.ts`, `*.routes.ts`, `server.ts`.
+- **Shared Infrastructure Separation**: `services/shared-core/` chỉ chứa hạ tầng nền tảng (`config`, `correlation`, `domain.error`, `auth`, `rate-limiter`, `error-handler`, `pii-mask`, `event-bus`).
+- **Type Safety**: 100% TypeScript `strict: true`, cấm lạm dụng `any`.
+- **Gateway & Attack Surface Isolation**: Mọi client request qua Gateway (`Kong :8000` / `Nginx :8080`); SI Monitoring Lab cô lập rõ và kiểm soát truy cập.
+
+---
+
+## 3. Definition of Done (DoD)
+- Không file mã nguồn nào vượt quá 300 dòng (vi phạm SRP).
+- `npx tsc --noEmit` thoát mã `0`.
+- `npm test` vượt qua 100% các spec (Unit + API + Integration + E2E + Failure `TC01`–`TC10`).
+- Zero hardcoded secrets (`.env` nằm trong `.gitignore`, chỉ commit `.env.example`).

@@ -1,0 +1,84 @@
+name: SE445 ORI DevSecOps Quality & Security Gate
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+
+permissions:
+  contents: read
+  security-events: write
+
+jobs:
+  typecheck-and-integration-tests:
+    name: TypeScript Strict & Automated Test Suite
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: TypeScript Strict Typecheck
+        run: npx tsc --noEmit
+
+      - name: Run Full Unit, API, Integration & Failure Test Suite
+        env:
+          NODE_ENV: test
+        run: npm test
+
+      - name: Dependency Vulnerability Audit
+        run: npm audit --omit=dev --audit-level=high
+
+  secret-scan-gitleaks:
+    name: Secret Detection (Gitleaks OSS)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Run Gitleaks Secret Scanner
+        uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  sast-semgrep:
+    name: Static Application Security Testing (Semgrep OSS)
+    runs-on: ubuntu-latest
+    container:
+      image: semgrep/semgrep
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Run Semgrep OWASP TypeScript Rules
+        run: semgrep ci --config p/typescript --config p/owasp-top-ten --config p/nodejs
+        continue-on-error: true
+
+  container-scan-trivy:
+    name: Container & Filesystem CVE Scan (Trivy OSS)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Run Trivy Vulnerability Scanner
+        uses: aquasecurity/trivy-action@0.28.0
+        with:
+          scan-type: 'fs'
+          scan-ref: '.'
+          scanners: 'vuln'
+          format: 'table'
+          exit-code: '1'
+          severity: 'CRITICAL,HIGH'
+          ignore-unfixed: true

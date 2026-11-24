@@ -1,0 +1,206 @@
+# ==========================================================
+# SE445 ORI - Full Stack Docker Compose (0 VND Local Runtime)
+# Network Isolation + Memory Limits (R01 <= 1.7GB for 8GB RAM)
+# ==========================================================
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: ori_postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-caseuser}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-casepass_local_change_me}
+      POSTGRES_DB: ${POSTGRES_DB:-retail}
+    volumes:
+      - ori_pgdata:/var/lib/postgresql/data
+      - ./infra/postgres/init:/docker-entrypoint-initdb.d:ro
+    expose:
+      - "5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-caseuser} -d ${POSTGRES_DB:-retail}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    mem_limit: 256m
+    networks:
+      - ori_internal
+
+  rabbitmq:
+    image: rabbitmq:3-management-alpine
+    container_name: ori_rabbitmq
+    restart: unless-stopped
+    environment:
+      RABBITMQ_DEFAULT_USER: ${RABBITMQ_USER:-caseuser}
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASSWORD:-casepass_local_change_me}
+    ports:
+      - "${RABBITMQ_MGMT_PORT:-15672}:15672"
+    volumes:
+      - ./infra/rabbitmq/rabbitmq.conf:/etc/rabbitmq/rabbitmq.conf:ro
+      - ./infra/rabbitmq/definitions.json:/etc/rabbitmq/definitions.json:ro
+    expose:
+      - "5672"
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    mem_limit: 384m
+    networks:
+      - ori_internal
+      - ori_public
+
+  wms-system:
+    build:
+      context: .
+      dockerfile: services/wms-system/Dockerfile
+    container_name: ori_wms_system
+    restart: unless-stopped
+    environment:
+      NODE_ENV: production
+      WMS_PORT: 3001
+      POSTGRES_HOST: postgres
+      POSTGRES_PORT: 5432
+      POSTGRES_USER: ${POSTGRES_USER:-caseuser}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-casepass_local_change_me}
+      RABBITMQ_URL: amqp://${RABBITMQ_USER:-caseuser}:${RABBITMQ_PASSWORD:-casepass_local_change_me}@rabbitmq:5672
+    depends_on:
+      postgres:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    expose:
+      - "3001"
+    mem_limit: 128m
+    networks:
+      - ori_internal
+
+  crm-system:
+    build:
+      context: .
+      dockerfile: services/crm-system/Dockerfile
+    container_name: ori_crm_system
+    restart: unless-stopped
+    environment:
+      NODE_ENV: production
+      CRM_PORT: 3002
+      POSTGRES_HOST: postgres
+      POSTGRES_PORT: 5432
+      POSTGRES_USER: ${POSTGRES_USER:-caseuser}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-casepass_local_change_me}
+      RABBITMQ_URL: amqp://${RABBITMQ_USER:-caseuser}:${RABBITMQ_PASSWORD:-casepass_local_change_me}@rabbitmq:5672
+    depends_on:
+      postgres:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    expose:
+      - "3002"
+    mem_limit: 128m
+    networks:
+      - ori_internal
+
+  tms-system:
+    build:
+      context: .
+      dockerfile: services/tms-system/Dockerfile
+    container_name: ori_tms_system
+    restart: unless-stopped
+    environment:
+      NODE_ENV: production
+      TMS_PORT: 3003
+      POSTGRES_HOST: postgres
+      POSTGRES_PORT: 5432
+      POSTGRES_USER: ${POSTGRES_USER:-caseuser}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-casepass_local_change_me}
+      RABBITMQ_URL: amqp://${RABBITMQ_USER:-caseuser}:${RABBITMQ_PASSWORD:-casepass_local_change_me}@rabbitmq:5672
+    depends_on:
+      postgres:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    expose:
+      - "3003"
+    mem_limit: 128m
+    networks:
+      - ori_internal
+
+  order-process:
+    build:
+      context: .
+      dockerfile: services/order-process/Dockerfile
+    container_name: ori_order_process
+    restart: unless-stopped
+    environment:
+      NODE_ENV: production
+      ORDER_PORT: 3004
+      POSTGRES_HOST: postgres
+      POSTGRES_PORT: 5432
+      POSTGRES_USER: ${POSTGRES_USER:-caseuser}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-casepass_local_change_me}
+      RABBITMQ_URL: amqp://${RABBITMQ_USER:-caseuser}:${RABBITMQ_PASSWORD:-casepass_local_change_me}@rabbitmq:5672
+      WMS_BASE_URL: http://wms-system:3001
+      CRM_BASE_URL: http://crm-system:3002
+      TMS_BASE_URL: http://tms-system:3003
+      JWT_SECRET: ${JWT_SECRET:-ori-dev-jwt-secret-change-in-production}
+      GEMINI_API_KEY: ${GEMINI_API_KEY:-}
+    depends_on:
+      postgres:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    expose:
+      - "3004"
+    mem_limit: 256m
+    networks:
+      - ori_internal
+      - ori_public
+
+  kong-gateway:
+    image: kong:3.8
+    container_name: ori_kong_gateway
+    restart: unless-stopped
+    environment:
+      KONG_DATABASE: "off"
+      KONG_DECLARATIVE_CONFIG: /kong/declarative/kong.yml
+      KONG_PROXY_ACCESS_LOG: /dev/stdout
+      KONG_PROXY_ERROR_LOG: /dev/stderr
+    ports:
+      - "${KONG_PORT:-8000}:8000"
+    volumes:
+      - ./infra/kong/kong.docker.yml:/kong/declarative/kong.yml:ro
+    depends_on:
+      order-process:
+        condition: service_started
+    mem_limit: 256m
+    networks:
+      - ori_public
+      - ori_internal
+
+  nginx-gateway:
+    image: nginx:1.27-alpine
+    container_name: ori_nginx_gateway
+    restart: unless-stopped
+    ports:
+      - "${GATEWAY_PORT:-8080}:80"
+    volumes:
+      - ./infra/nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./si-dashboard:/usr/share/nginx/html:ro
+    depends_on:
+      order-process:
+        condition: service_started
+    mem_limit: 64m
+    networks:
+      - ori_public
+      - ori_internal
+
+volumes:
+  ori_pgdata:
+    name: ori_pgdata
+
+networks:
+  ori_internal:
+    name: ori_internal_net
+    internal: true
+  ori_public:
+    name: ori_public_net

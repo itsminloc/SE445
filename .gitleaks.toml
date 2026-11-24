@@ -1,0 +1,21 @@
+title = "SE445 ORI Gitleaks Configuration"
+
+[extend]
+useDefault = true
+
+[[allowlists]]
+description = "Ignore synthetic test files, docs, lockfiles, and .env.example templates"
+paths = [
+  '''(^|/)[^/]+\.spec\.ts$''',
+  '''(^|/)docs/''',
+  '''(^|/)\.env\.example$''',
+  '''(^|/)package-lock\.json$'''
+]
+
+[[allowlists]]
+description = "Ignore intentional local demo/dev placeholders"
+regexTarget = "secret"
+regexes = [
+  '''casepass_local[_a-zA-Z0-9]*''',
+  '''ori[-_](dev|test)[-_](jwt|secret|password)[-_a-zA-Z0-9]*'''
+]

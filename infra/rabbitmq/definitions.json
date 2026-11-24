@@ -1,0 +1,87 @@
+{
+  "exchanges": [
+    {
+      "name": "retail.events",
+      "vhost": "/",
+      "type": "topic",
+      "durable": true,
+      "auto_delete": false
+    },
+    {
+      "name": "retail.dlx",
+      "vhost": "/",
+      "type": "direct",
+      "durable": true,
+      "auto_delete": false
+    }
+  ],
+  "queues": [
+    {
+      "name": "wms.order-created",
+      "vhost": "/",
+      "durable": true,
+      "auto_delete": false,
+      "arguments": {
+        "x-dead-letter-exchange": "retail.dlx",
+        "x-dead-letter-routing-key": "dlq.retail"
+      }
+    },
+    {
+      "name": "crm.order-created",
+      "vhost": "/",
+      "durable": true,
+      "auto_delete": false,
+      "arguments": {
+        "x-dead-letter-exchange": "retail.dlx",
+        "x-dead-letter-routing-key": "dlq.retail"
+      }
+    },
+    {
+      "name": "tms.order-created",
+      "vhost": "/",
+      "durable": true,
+      "auto_delete": false,
+      "arguments": {
+        "x-dead-letter-exchange": "retail.dlx",
+        "x-dead-letter-routing-key": "dlq.retail"
+      }
+    },
+    {
+      "name": "retail.dlq",
+      "vhost": "/",
+      "durable": true,
+      "auto_delete": false,
+      "arguments": {}
+    }
+  ],
+  "bindings": [
+    {
+      "source": "retail.events",
+      "vhost": "/",
+      "destination": "wms.order-created",
+      "destination_type": "queue",
+      "routing_key": "order.created"
+    },
+    {
+      "source": "retail.events",
+      "vhost": "/",
+      "destination": "crm.order-created",
+      "destination_type": "queue",
+      "routing_key": "order.created"
+    },
+    {
+      "source": "retail.events",
+      "vhost": "/",
+      "destination": "tms.order-created",
+      "destination_type": "queue",
+      "routing_key": "order.created"
+    },
+    {
+      "source": "retail.dlx",
+      "vhost": "/",
+      "destination": "retail.dlq",
+      "destination_type": "queue",
+      "routing_key": "dlq.retail"
+    }
+  ]
+}

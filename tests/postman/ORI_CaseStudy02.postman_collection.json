@@ -1,0 +1,65 @@
+{
+  "info": {
+    "name": "SE445 ORI - Omnichannel Retail Integration (Case Study 02)",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "01. Health Check Gateway",
+      "request": { "method": "GET", "url": "http://localhost:8080/health" }
+    },
+    {
+      "name": "02. Issue Demo JWT Token",
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": { "mode": "raw", "raw": "{\"channel\":\"WEB_BRANCH_01\",\"role\":\"ADMIN\"}" },
+        "url": "http://localhost:8080/api/v1/auth/token"
+      }
+    },
+    {
+      "name": "03. WMS Check Inventory (TC01/TC04)",
+      "request": { "method": "GET", "url": "http://localhost:8080/api/v1/wms/inventory/SKU-001" }
+    },
+    {
+      "name": "04. Create Order Valid - 202 Accepted (TC01)",
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": {
+          "mode": "raw",
+          "raw": "{\"channel\":\"WEB_BRANCH_01\",\"customerId\":\"CUS-001\",\"items\":[{\"sku\":\"SKU-001\",\"quantity\":2,\"unitPrice\":150000}]}"
+        },
+        "url": "http://localhost:8080/api/v1/orders"
+      }
+    },
+    {
+      "name": "05. Create Order Out of Stock - 409 Conflict (TC02)",
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": {
+          "mode": "raw",
+          "raw": "{\"channel\":\"WEB_BRANCH_01\",\"customerId\":\"CUS-001\",\"items\":[{\"sku\":\"SKU-005\",\"quantity\":2,\"unitPrice\":1200000}]}"
+        },
+        "url": "http://localhost:8080/api/v1/orders"
+      }
+    },
+    {
+      "name": "06. AI POS Legacy Ingest (TC10)",
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": {
+          "mode": "raw",
+          "raw": "{\"storeId\":\"POS_STORE_214\",\"rawPayload\":\"MA_KH: CUS-002 | SDT: 0905123456 | SKU-002 SL:1 GIA:450000d\",\"autoSubmitOrder\":true}"
+        },
+        "url": "http://localhost:8080/api/v1/pos/ingest"
+      }
+    },
+    {
+      "name": "07. SI Monitoring Telemetry",
+      "request": { "method": "GET", "url": "http://localhost:8080/api/v1/monitoring/telemetry" }
+    }
+  ]
+}
