@@ -55,6 +55,7 @@ services:
     environment:
       KONG_DATABASE: "off"
       KONG_DECLARATIVE_CONFIG: /kong/declarative/kong.yml
+      KONG_NGINX_WORKER_PROCESSES: "1"
       KONG_PROXY_ACCESS_LOG: /dev/stdout
       KONG_ADMIN_ACCESS_LOG: /dev/stdout
       KONG_PROXY_ERROR_LOG: /dev/stderr
@@ -67,7 +68,7 @@ services:
       - ./infra/kong/kong.yml:/kong/declarative/kong.yml:ro
     extra_hosts:
       - "host.docker.internal:host-gateway"
-    mem_limit: 256m
+    mem_limit: 384m
     networks:
       - ori_dev_net
 

@@ -71,21 +71,27 @@ export class IntegrationEventBus {
       this.mode = 'IN_MEMORY';
       return this.mode;
     }
-    try {
-      this.connection = await amqplib.connect(oriConfig.rabbitmq.url, { timeout: 1500 });
-      this.channel = await this.connection.createConfirmChannel();
-      await this.channel.assertExchange(oriConfig.rabbitmq.exchange, 'topic', { durable: true });
-      await this.channel.assertExchange(oriConfig.rabbitmq.dlx, 'direct', { durable: true });
-      await this.channel.assertQueue(oriConfig.rabbitmq.dlq, { durable: true });
-      await this.channel.bindQueue(oriConfig.rabbitmq.dlq, oriConfig.rabbitmq.dlx, 'dlq.retail');
-      this.mode = 'RABBITMQ';
-      this.emitActivity('BROKER', 'INFO', 'RabbitMQ', `Connected to AMQP (${oriConfig.rabbitmq.exchange})`);
-      return this.mode;
-    } catch {
-      this.mode = 'IN_MEMORY';
-      this.emitActivity('BROKER', 'INFO', 'LocalBroker', 'RabbitMQ unreachable — using In-Process AMQP Emulator');
-      return this.mode;
+    const maxAttempts = process.env.RABBITMQ_URL ? 5 : 1;
+    for (let attempt = 1; attempt <= maxAttempts; attempt += 1) {
+      try {
+        this.connection = await amqplib.connect(oriConfig.rabbitmq.url, { timeout: 2000 });
+        this.channel = await this.connection.createConfirmChannel();
+        await this.channel.assertExchange(oriConfig.rabbitmq.exchange, 'topic', { durable: true });
+        await this.channel.assertExchange(oriConfig.rabbitmq.dlx, 'direct', { durable: true });
+        await this.channel.assertQueue(oriConfig.rabbitmq.dlq, { durable: true });
+        await this.channel.bindQueue(oriConfig.rabbitmq.dlq, oriConfig.rabbitmq.dlx, 'dlq.retail');
+        this.mode = 'RABBITMQ';
+        this.emitActivity('BROKER', 'INFO', 'RabbitMQ', `Connected to AMQP (${oriConfig.rabbitmq.exchange})`);
+        return this.mode;
+      } catch {
+        if (attempt < maxAttempts) {
+          await new Promise((r) => setTimeout(r, 1500));
+        }
+      }
     }
+    this.mode = 'IN_MEMORY';
+    this.emitActivity('BROKER', 'INFO', 'LocalBroker', 'RabbitMQ unreachable — using In-Process AMQP Emulator');
+    return this.mode;
   }
 
   async subscribe(queueName: string, routingKey: string, handler: EventHandler): Promise<void> {
