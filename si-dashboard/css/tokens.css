@@ -1,0 +1,91 @@
+/* Editorial Monochrome Bento Design System (Cloned from Talmo Studio UI/UX) */
+:root {
+  --bg-canvas: #f3f3f1;
+  --bg-surface: #ffffff;
+  --bg-subtle: #f8f8f6;
+  --bg-subtile: #f4f4f1;
+  --bg-obsidian: #111113;
+  --bg-obsidian-inner: #18181b;
+  --bg-pill-track: #ffffff;
+
+  --border-hairline: #e6e6e2;
+  --border-strong: #d4d4cf;
+  --border-obsidian: rgba(255, 255, 255, 0.12);
+
+  --ink-primary: #111111;
+  --ink-secondary: #6e6e6b;
+  --ink-muted: #9a9a96;
+  --ink-on-obsidian: #ffffff;
+  --ink-on-obsidian-muted: #a1a1aa;
+
+  --pill-booked-bg: #141416;
+  --pill-booked-ink: #ffffff;
+  --pill-pending-bg: #eaeae6;
+  --pill-pending-ink: #27272a;
+  --pill-done-bg: #f7f7f4;
+  --pill-done-ink: #52525b;
+
+  --accent-green: #16a34a;
+  --accent-green-soft: rgba(34, 197, 94, 0.14);
+  --accent-green-bright: #4ade80;
+  --accent-amber: #d97706;
+  --accent-amber-soft: rgba(245, 158, 11, 0.14);
+  --accent-red: #dc2626;
+  --accent-red-soft: rgba(239, 68, 68, 0.14);
+
+  --chart-stroke: #111113;
+  --chart-fill-start: rgba(17, 17, 19, 0.13);
+  --chart-fill-end: rgba(17, 17, 19, 0.01);
+  --chart-bar-muted: #d4d4d0;
+  --chart-bar-active: #111113;
+
+  --shadow-bento: 0 1px 2px rgba(0, 0, 0, 0.03), 0 8px 24px rgba(0, 0, 0, 0.035);
+  --shadow-pill: 0 1px 3px rgba(0, 0, 0, 0.04), 0 4px 12px rgba(0, 0, 0, 0.03);
+  --radius-bento: 20px;
+  --radius-sub: 13px;
+  --font-sans: 'Plus Jakarta Sans', 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-mono: 'JetBrains Mono', Consolas, monospace;
+}
+
+[data-theme="dark"] {
+  --bg-canvas: #0e0e10;
+  --bg-surface: #17171a;
+  --bg-subtle: #1e1e22;
+  --bg-subtile: #202025;
+  --bg-obsidian: #08080a;
+  --bg-obsidian-inner: #121215;
+  --bg-pill-track: #17171a;
+
+  --border-hairline: rgba(255, 255, 255, 0.08);
+  --border-strong: rgba(255, 255, 255, 0.16);
+  --border-obsidian: rgba(255, 255, 255, 0.14);
+
+  --ink-primary: #f4f4f5;
+  --ink-secondary: #a1a1aa;
+  --ink-muted: #71717a;
+
+  --pill-booked-bg: #f4f4f5;
+  --pill-booked-ink: #111113;
+  --pill-pending-bg: #27272a;
+  --pill-pending-ink: #e4e4e7;
+  --pill-done-bg: #1c1c20;
+  --pill-done-ink: #a1a1aa;
+
+  --chart-stroke: #f4f4f5;
+  --chart-fill-start: rgba(244, 244, 245, 0.16);
+  --chart-fill-end: rgba(244, 244, 245, 0.01);
+  --chart-bar-muted: #52525b;
+  --chart-bar-active: #ffffff;
+
+  --shadow-bento: 0 1px 2px rgba(0, 0, 0, 0.35);
+  --shadow-pill: 0 2px 10px rgba(0, 0, 0, 0.35);
+}
+
+/* Circular View Transition Theme Reveal */
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation: none;
+  mix-blend-mode: normal;
+}
+::view-transition-old(root) { z-index: 1; }
+::view-transition-new(root) { z-index: 9999; }
